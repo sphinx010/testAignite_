@@ -1,6 +1,6 @@
 # TestAIgnite Reporter
 
-An AI-powered Cypress test reporter that generates enriched, deterministic, and offline-ready HTML reports using Hugging Face inference.
+TestAIgnite: an enterprise Cypress framework using Llama-3, Mixtral, and Phi-3 to perform AI-driven failure analysis and intelligent CI reporting. Less noise. More signal. 
 
 ## Installation
 
