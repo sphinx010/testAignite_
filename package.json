@@ -1,0 +1,36 @@
+{
+    "name": "testaignite-reporter",
+    "version": "1.0.0",
+    "description": "AI-powered Cypress test reporter generating enriched HTML reports",
+    "main": "index.js",
+    "bin": {
+        "testaignite": "./bin/cli.js"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sphinx010/testaignite-reporter.git"
+    },
+    "keywords": [
+        "cypress",
+        "reporter",
+        "ai",
+        "mochawesome",
+        "html"
+    ],
+    "author": "Ayooluwa Paul Obembe",
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/sphinx010/testaignite-reporter/issues"
+    },
+    "homepage": "https://github.com/sphinx010/testaignite-reporter#readme",
+    "dependencies": {
+        "@huggingface/inference": "^4.13.10",
+        "chart.js": "^4.5.1",
+        "glob": "^13.0.0",
+        "handlebars": "^4.7.8",
+        "lodash": "^4.17.23"
+    }
+}

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TestAIgnite</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Ambient background layer -->
+    <div class="bg"></div>
+    <div class="shell">
+      <!-- Sidebar / primary navigation -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">TAI</div>
+          <div>
+            <div class="brand-name">Test<span class="brand-ai">AI</span>gnite</div>
+            <div class="brand-sub">AI Analytics Console</div>
+          </div>
+          <button id="nav-close" class="nav-close" type="button" aria-label="Close navigation">✕</button>
+        </div>
+        <nav class="nav">
+          <div class="nav-section">Menu</div>
+          <button class="nav-link">Dashboard</button>
+          <button class="nav-link active">Reports</button>
+        </nav>
+      </aside>
+
+      <div class="app">
+        <!-- Top header: title + global actions -->
+        <header class="topbar">
+          <div class="title-block">
+            <div class="eyebrow">Data Driven QA Report</div>
+            <h1>Test<span class="brand-ai">AI</span>gnite</h1>
+            <p>AI-first QA analytics</p>
+            <div class="meta">
+              <span id="last-updated">Last updated: {{meta.timestamp}}</span>
+              <span id="status-chip" class="chip status {{stats.statusClass}}">{{stats.statusLabel}}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="nav-open" class="btn ghost nav-open" type="button" aria-label="Open navigation">
+              <span class="burger" aria-hidden="true"></span>
+            </button>
+            <button id="refresh-btn" class="btn ghost">Refresh</button>
+            <button id="download-btn" class="btn solid">Download JSON</button>
+            <button id="theme-toggle" class="btn ghost" type="button">Dark mode</button>
+            <div class="profile">
+              <div class="avatar"></div>
+              <div>
+                <div class="profile-name">Ayooluwa</div>
+                <div class="profile-role">QA Engineer</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Error surface (shown when report not loaded) -->
+        <section id="error-card" class="card error hidden">
+          <h2>Report Load Failed</h2>
+          <p>We could not load the TestAIgnite report.</p>
+          <div class="error-meta">
+            <div>
+              <strong>Attempted URLs</strong>
+              <ul id="error-list"></ul>
+            </div>
+            <div class="hint">
+              Quick fix: Upload your report <code> </code> or ensure
+              <code>results.json</code> exists in the reports dir.
+            </div>
+          </div>
+        </section>
+
+        <main class="content-grid">
+          <section class="left">
+            <!-- Execution trends (per-metric tiles) -->
+            <div class="card metrics-card">
+              <div class="card-header">
+                <div>
+                  <h2>Execution Trends</h2>
+                  <p>Live snapshot of test volume & health</p>
+                </div>
+              </div>
+              <div class="metrics-chart">
+                <div class="trend-grid">
+                  <div class="trend-tile">
+                    <div class="trend-head">
+                      <span>Total Tests</span>
+                      <strong id="trend-tests-value">{{stats.tests}}</strong>
+                    </div>
+                    <canvas id="trend-tests" aria-label="Total tests trend"></canvas>
+                  </div>
+                  <div class="trend-tile">
+                    <div class="trend-head">
+                      <span>Pass Rate</span>
+                      <strong id="trend-passrate-value">{{stats.passPercent}}%</strong>
+                    </div>
+                    <canvas id="trend-passrate" aria-label="Pass rate trend"></canvas>
+                  </div>
+                  <div class="trend-tile">
+                    <div class="trend-head">
+                      <span>Failures</span>
+                      <strong id="trend-fail-value">{{stats.failures}}</strong>
+                    </div>
+                    <canvas id="trend-fail" aria-label="Fail trend"></canvas>
+                  </div>
+                  <div class="trend-tile">
+                    <div class="trend-head">
+                      <span>Runtime</span>
+                      <strong id="trend-runtime-value">{{stats.duration}}m</strong>
+                    </div>
+                    <canvas id="trend-runtime" aria-label="Runtime trend"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Distribution donut -->
+            <div class="card chart-card">
+              <div class="card-header">
+                <div>
+                  <h2>Distribution</h2>
+                  <p>Track your test completion mix</p>
+                </div>
+                <div class="legend">
+                  <span class="legend-item pass"><i></i>Pass</span>
+                  <span class="legend-item fail"><i></i>Fail</span>
+                  <span class="legend-item skipped"><i></i>Skipped</span>
+                  <span class="legend-item pending"><i></i>Pending</span>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <svg id="donut" viewBox="0 0 280 280" aria-label="Test result donut chart">
+                  <circle class="donut-track" cx="140" cy="140" r="98"></circle>
+                  <g id="donut-group" transform="rotate(-90 140 140)"></g>
+                </svg>
+                <div class="chart-center">
+                  <div id="center-label" class="center-label">Total Tests</div>
+                  <div id="total-tests" class="center-value">{{stats.tests}}</div>
+                  <div id="center-sub" class="center-sub">Tap a segment to filter</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Speed analysis bars -->
+            <div class="speed-card">
+              <div class="speed-bar-header">
+                <div>
+                  <h2>Speed Analysis</h2>
+                  <p>Fastest tests bubble up. Fails excluded.</p>
+                </div>
+                <div class="legend">
+                  <span class="legend-item pass"><i></i>Fast</span>
+                  <span class="legend-item medium"><i></i>Medium</span>
+                  <span class="legend-item slow"><i></i>Slow</span>
+                </div>
+              </div>
+              <div class="speed-wrap">
+                <canvas id="speed-chart" aria-label="Per test speed bar chart"></canvas>
+                <div id="speed-fastest" class="speed-note"></div>
+                <div id="speed-slowest" class="speed-note slowest"></div>
+              </div>
+            </div>
+
+          </section>
+
+          <section class="right">
+            <!-- Table + filters -->
+            <div class="card table-card">
+              <div class="table-controls">
+                <div class="filters">
+                  <button class="pill active" data-filter="all">All</button>
+                  <button class="pill pass" data-filter="passed">Passed</button>
+                  <button class="pill fail" data-filter="failed">Failed</button>
+                  <button class="pill skipped" data-filter="skipped">Skipped</button>
+                  <button class="pill pending" data-filter="pending">Pending</button>
+                </div>
+                <div class="search">
+                  <input id="search-input" type="search" placeholder="Search tests or tags..." />
+                </div>
+                <div class="source-control">
+                  <label for="source-input">Report source</label>
+                  <div class="source-input">
+                    <input id="source-input" type="text" placeholder="./cypress/reports/results.json" />
+                    <button id="load-btn" class="btn ghost">Load</button>
+                  </div>
+                  <div class="source-upload">
+                    <input id="file-input" type="file" accept=".json,application/json" />
+                    <label class="upload-label" for="file-input">Upload TestAIgnite Report</label>
+                    <span id="file-name" class="file-name">No file selected</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Title</th>
+                      <th>Tags</th>
+                      <th>Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tests-body">
+                    <!-- Pre-rendered for instant visibility, hydrated by app.js for interaction -->
+                    {{#each tests}}
+                    <tr class="test-row" data-status="{{this.status}}">
+                      <td><span class="status-marker {{this.status}}"></span></td>
+                      <td class="test-title">{{this.title}}</td>
+                      <td>{{#each this.tags}}<span class="tag">{{this}}</span>{{/each}}</td>
+                      <td class="duration">{{this.duration}}ms</td>
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Upsell card -->
+            <div class="sidebar-card insights-card">
+              <div class="sidebar-card-title">AI Insights</div>
+              <p>Smart bug reporting with auto severity, priority, and impact.</p>
+              <button id="insights-btn" class="btn solid" type="button">View Insights</button>
+            </div>
+
+            <!-- Suites list -->
+            <div class="card suite-card">
+              <div class="card-header">
+                <div>
+                  <h2>Suites</h2>
+                  <p>Top level test groupings</p>
+                </div>
+                <span class="sparkline">
+                  <i></i><i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+              <div id="suite-list" class="suite-list">
+                {{#each suites}}
+                <div class="suite-item">{{this}}</div>
+                {{/each}}
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <!-- Mobile nav backdrop -->
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+    <!-- Jira-Style AI Insight Bug Report Modal -->
+    <div id="insights-modal" class="modal jira-modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-backdrop"></div>
+      <div class="jira-content">
+        <!-- Sticky Header -->
+        <header class="jira-header">
+          <div class="jira-header-top">
+            <div class="jira-title-block">
+              <h2 class="jira-title">AI Bug Insight Report</h2>
+              <span id="jira-status-badge" class="jira-badge status-badge">Unknown Status</span>
+            </div>
+            <button id="insights-close" class="jira-close-btn" type="button" aria-label="Close">×</button>
+          </div>
+          <div class="jira-meta-row">
+            <span class="jira-meta-item"><strong>Run ID:</strong> <span id="jira-run-id">--</span></span>
+            <span class="jira-meta-item"><strong>Time:</strong> <span id="jira-timestamp">--</span></span>
+            <span class="jira-meta-item"><strong>Env:</strong> Production (Detected)</span>
+          </div>
+        </header>
+
+        <!-- Scrollable Body -->
+        <div class="jira-body">
+          <!-- Section 1: Product Health -->
+          <section class="jira-section">
+            <h3 class="jira-section-title">Product Health Summary</h3>
+            <div id="jira-health-content" class="jira-health-grid"></div>
+          </section>
+
+          <!-- Section 2: Priority Breakdown -->
+          <section class="jira-section">
+            <h3 class="jira-section-title">AI Bug Priority Assessment</h3>
+            <div class="jira-table-wrap">
+              <table class="jira-table">
+                <thead>
+                  <tr>
+                    <th width="100">Priority</th>
+                    <th>Module</th>
+                    <th>Failed Test</th>
+                    <th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody id="jira-priority-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Section 3: Bug Cards -->
+          <section class="jira-section">
+            <h3 class="jira-section-title">Investigate Issues</h3>
+            <div id="jira-bug-list" class="jira-bug-list"></div>
+          </section>
+
+          <!-- Section 4: AI Recommendations -->
+          <section class="jira-section">
+            <h3 class="jira-section-title">AI Analysis & Recommendations</h3>
+            <div id="jira-recs-content" class="jira-recs-box"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="tooltip" class="tooltip hidden"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
