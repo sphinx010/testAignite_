@@ -6,10 +6,10 @@ TestAIgnite: an enterprise Cypress framework using Llama-3, Mixtral, and Phi-3 t
 
 Install the package as a dev dependency in your project:
 
-\`\`\`bash
+```bash
 # If hosted on GitHub
 npm install -D github:sphinx010/testaignite-reporter
-\`\`\`
+```
 
 ## Quick Start
 
@@ -19,17 +19,17 @@ This package expects to find your test results at: `./cypress/reports/.jsons/*.j
 
 ### 1. Set your API Key
 To use the AI enrichment features, you must provide a valid Hugging Face API token. Set this in your environment or CI/CD secrets:
-\`\`\`bash
+```bash
 export HUGGINGFACE_API_TOKEN="hf_your_token_here"
-\`\`\`
+```
 
 *(If no token is found, the reporter will safely fall back to generating the HTML report without AI insight tags).*
 
 ### 2. Generate the Report
 Run the CLI directly:
-\`\`\`bash
+```bash
 npx testaignite report:full
-\`\`\`
+```
 This will:
 1. Scan for the failed tests.
 2. Send failing assertion contexts to the AI model.
@@ -45,7 +45,7 @@ This will:
 
 You can also import the core functions explicitly if you need to build them into a larger node script:
 
-\`\`\`javascript
+```javascript
 const { enrichResults, generateHtmlReport } = require('testaignite-reporter');
 
 // Use custom directory targets if desired
@@ -56,4 +56,4 @@ const options = {
 
 await enrichResults(options);
 generateHtmlReport(options);
-\`\`\`
+```
