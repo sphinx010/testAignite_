@@ -3,7 +3,7 @@
 TestAIgnite: an enterprise Cypress framework using Llama-3, Mixtral, and Phi-3 to perform AI-driven failure analysis and intelligent CI reporting. Less noise. More signal. 
 
 ## Installation
-
+for more information check: testAignite_installation_guide.md
 Install the package as a dev dependency in your project:
 
 ```bash
