@@ -4,6 +4,7 @@ TestAIgnite: an enterprise Cypress framework using Llama-3, Mixtral, and Phi-3 t
 
 ## Installation
 for more information check: testAignite_installation_guide.md
+
 Install the package as a dev dependency in your project:
 
 ```bash
