@@ -104,6 +104,7 @@ ADOPT A BALANCED PERSPECTIVE:
 - Do not default to blaming the test logic.
 - If the test attempted a valid user action (e.g., click) and the system failed to respond (e.g., no navigation), that is a PRODUCT ISSUE.
 - Distinguish clearly between "The test failed to check X" (Test Issue) and "The test checked X, and X was broken" (Product Issue).
+- If test logic is valid, justify it using observable evidence (e.g., valid trigger, correct assertion, sufficient wait window). Avoid vague phrases like "appears".
 
 Test Context:
 - Test Name: "${context.title}"
@@ -120,15 +121,15 @@ Produce a JSON object compliant with this schema:
 
   "humanError": "Translate the Cypress error into a clear, educational statement for non-QA stakeholders (max 20 words).",
 
-  "testRootCause": "Analyze execution logic. Did the test script fail to wait? Did it assert the wrong thing? If the test logic is sound but the app behaved incorrectly, explicitly state 'Test logic appears sound'.",
+  "testRootCause": "Analyze execution logic using evidence. State whether assertion type, trigger, and wait conditions were valid. Do not use vague phrases.",
 
-  "productRootCause": "Infer product defects when the application fails to meet the contract implied by the test. If a button was clicked and nothing happened, that is a PRODUCT DEFECT. If a spinner never disappeared, that is a PRODUCT LATENCY DEFECT.",
+  "productRootCause": "Infer product defects only when the system fails after a valid trigger and coherent assertion. Identify the failure layer (trigger, API, response, UI rendering, or state binding).",
 
   "bugEffect": "Explain the realistic business or user-experience impact IF this defect propagates to production. Do not exaggerate.",
 
   "inferredExpected": "Define the correct system behavior using strict declarative subjunctive mood. Start with 'The [component] should...'.",
 
-  "recommendation": "Prescriptive fix. Distinguish clearly: 'Fix the Test' vs 'Fix the Product'. Explain WHY this is the correct remediation.",
+  "recommendation": "Prescriptive fix. Use 'Fix the Test' or 'Fix the Product'. Point to exact verification steps (API call, response payload, UI binding). Avoid generic advice.",
 
   "severity": "low" | "medium" | "high" | "critical",
 
@@ -139,42 +140,58 @@ Produce a JSON object compliant with this schema:
 
 INFERENCE RULES (BAKED-IN LOGIC)
 
+0. MANDATORY REASONING ORDER (DO NOT SKIP):
+   Internally evaluate before concluding:
+   - Assertion Type (UI text, URL, API, state)
+   - Trigger Validity (Was a valid action executed?)
+   - System Response (Did any observable effect occur?)
+   - Timeout Significance (Was wait duration sufficient to rule out flakiness?)
+
 1. Determine Test Intent FIRST:
-   a. Infer intent from test title, test description, and assertion type.
+   a. Infer intent from test title, description, and assertion type.
    b. Examples:
-      - Navigation test → "User expects URL change"
-      - Security test → "User expects Access Denied"
-      - Form test → "User expects validation success"
+      - Navigation test → URL change expected
+      - Security test → Access denied expected
+      - Form test → Validation success expected
 
-2. Deduction Weights (Logic Guardrails):
-   a. [HIGH PRODUCT PROBABILITY]: Action performed (Click/Type) -> No Side Effect observed.
-      (e.g., "Expected URL to change, but it did not"). This implies the application ignored input.
-   b. [HIGH TEST PROBABILITY]: Syntax Error, Undefined Variable, or Invalid Selector.
-      (e.g., "cy.get(...) failed because element not found"). NOTE: If element SHOULD be there but isn't, it might be product regression, but usually implies selector drift.
-   c. [SHARED PROBABILITY]: Timeouts (4000ms+).
-      - If the app is just slow? -> Product Performance.
-      - If the test didn't wait enough? -> Test Logic.
-   d. [ZERO EFFECT]: If a test clicks a button and assertions assume a new page, but the URL remains the same, do NOT say "Test failed to wait". Say "Button click triggered no action".
+2. Deduction Weights:
+   a. HIGH PRODUCT PROBABILITY:
+      Valid action → No observable system response
+      → Indicates broken state transition or ignored input
 
-3. Evaluate Assertion Coherence:
-   a. If assertion is brittle (e.g. matching exact text that changes often), suspect **Test Issue**.
-   b. If assertion is robust (e.g. checking URL after click) and fails, suspect **Product Issue**.
+   b. HIGH TEST PROBABILITY:
+      Syntax error, invalid selector, or assertion unrelated to intent
 
-4. Severity Calibration:
-   a. Low: Copy, cosmetic, weak text assertions.
-   b. Medium: Functional UI inconsistencies.
-   c. High: Broken navigation, failed contracts, unresponsive interactive elements.
-   d. Critical: Security, data integrity, auth, or release-blocking paths.
+   c. TIMEOUT CLASSIFICATION:
+      - Short timeout → possible test sync issue
+      - Extended timeout (>= 8000ms) → strong product failure signal unless disproven
 
-5. Pedagogical Tone Requirement:
-   a. Explain failures as a senior QA architect would.
-   b. Be objective. If the product failed, say so.
-   c. Avoid generic advice or filler.
+   d. ZERO EFFECT RULE:
+      If action produces no UI, URL, or state change → PRODUCT DEFECT
 
-6. Output Rules:
-   a. Output MUST be strictly valid JSON.
-   b. No markdown.
-   c. No extra commentary.
+3. Assertion Coherence:
+   a. Misaligned assertion → Test Issue
+   b. Aligned assertion + valid trigger + failure → Product Issue
+
+4. Root Cause Precision:
+   - Identify failure layer: trigger → API → response → UI → state binding
+   - Use causal language (e.g., "Post-action state transition failed after valid trigger")
+   - Avoid vague phrases
+
+5. Recommendation Precision:
+   - Direct engineer to exact checks (API call, payload, UI binding)
+   - Avoid generic statements
+
+6. Severity Calibration:
+   a. Low: Cosmetic or weak assertions
+   b. Medium: Functional inconsistencies
+   c. High: Broken flows or contracts
+   d. Critical: Security, data integrity, auth, or release blockers
+
+7. Output Rules:
+   a. Output MUST be strictly valid JSON
+   b. No markdown
+   c. No extra commentary
 `.trim();
 };
 
